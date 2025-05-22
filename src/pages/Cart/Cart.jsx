@@ -29,22 +29,22 @@ function Cart() {
     setUpdatedCart(cart);
   }, [cart]);
 
-  const enviarEmail = () => {
-    const templateParams = {
-      user_email: email,
-      user_cellphone: cellphone,
-      user_address: address,
-      message: `Productos en el carrito:\n${updatedCart.map(item => `Nombre: ${item.title}, Precio: ${item.price}, Cantidad: ${item.quantity}`).join('\n')}\n Esta es la información del usuario: \nCelular: ${cellphone}, Direccion: ${address}, Mensaje: ${message}`,
-    };
+  // const enviarEmail = () => {
+  //   const templateParams = {
+  //     user_email: email,
+  //     user_cellphone: cellphone,
+  //     user_address: address,
+  //     message: `Productos en el carrito:\n${updatedCart.map(item => `Nombre: ${item.title}, Precio: ${item.price}, Cantidad: ${item.quantity}`).join('\n')}\n Esta es la información del usuario: \nCelular: ${cellphone}, Direccion: ${address}, Mensaje: ${message}`,
+  //   };
 
-    emailjs.send('service_nmujodf', 'template_3eofazh', templateParams, "K7qLi6I9SCwVn1oPA")
-      .then((res) => {
-        alert("Correo enviado correctamente.");
-        console.log(res);
-      }).catch((error) => {
-        console.error("Error al enviar el correo:", error);
-      });
-  };
+  //   emailjs.send('service_nmujodf', 'template_3eofazh', templateParams, "K7qLi6I9SCwVn1oPA")
+  //     .then((res) => {
+  //       alert("Correo enviado correctamente.");
+  //       console.log(res);
+  //     }).catch((error) => {
+  //       console.error("Error al enviar el correo:", error);
+  //     });
+  // };
 
   const createPayment = async () => {
     try {
