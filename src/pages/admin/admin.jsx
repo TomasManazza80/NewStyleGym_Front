@@ -4,9 +4,12 @@ import axios from 'axios';
 const API_URL = 'http://localhost:3000';
 
 const Admin = () => {
-  const getCurrentMonth = () => {
-    const date = new Date();
-    return date.getMonth() + 1;
+  const getCurrentMonthName = () => {
+    const meses = [
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+    return meses[new Date().getMonth()];
   };
 
   // Estados para usuarios
@@ -14,18 +17,22 @@ const Admin = () => {
   const [todosMisProductos, setTodosMisProductos] = useState([]);
   const [seccionActiva, setSeccionActiva] = useState('Usuarios');
   const [searchTerm, setSearchTerm] = useState('');
+  
   // Estados para precios de actividades
   const [preciosActividades, setPreciosActividades] = useState({
-    musculacion3dias: 0,
-    musculacion7dias: 0,
-    sumba: 0,
-    crossfit: 0,
-    yoga: 0,
-    pilates: 0,
-    spinning: 0,
-    boxeo: 0
+    unaActividad: 0,
+    paseLibre: 0,
+    estudiante3dias: 0
   });
+  
   const [mensajeExito, setMensajeExito] = useState('');
+
+  // Opciones de actividad permitidas
+  const opcionesActividad = [
+    "1 actividad",
+    "pase libre", 
+    "Estudiante"
+  ];
 
   useEffect(() => {
     const obtenerUsuarios = async () => {
@@ -38,7 +45,7 @@ const Admin = () => {
           numero: usuario.number,
           email: usuario.email,
           role: usuario.role,
-          meses: usuario.meses,
+          meses: usuario.meses || [], // Asegurarse que meses es un array
           actividad: usuario.actividad,
           fechaCreacion: new Date(usuario.createdAt).toLocaleDateString(),
           fechaActualizacion: new Date(usuario.updatedAt).toLocaleDateString()
@@ -50,9 +57,13 @@ const Admin = () => {
 
     const obtenerPreciosActividades = async () => {
       try {
-        const response = await axios.get(`${API_URL}/precios-actividades`);
+        const response = await axios.get(`${API_URL}/api/activity-prices`);
         if (response.data) {
-          setPreciosActividades(response.data);
+          setPreciosActividades({
+            unaActividad: response.data.unaActividad,
+            paseLibre: response.data.paseLibre,
+            estudiante3dias: response.data.estudiante3dias
+          });
         }
       } catch (error) {
         console.error('Error al obtener precios de actividades:', error);
@@ -80,28 +91,34 @@ const Admin = () => {
     }
   };
 
-  const handleEditarProducto = async (productoActualizado) => {
+  const handleEditarActividad = async (userId, nuevaActividad) => {
     try {
-      await axios.put(`https://ecommerceback-haed.onrender.com/products/products/${productoActualizado.id}`, productoActualizado);
-      setTodosMisProductos(todosMisProductos.map(producto => 
-        producto.id === productoActualizado.id ? productoActualizado : producto
+      await axios.put(`${API_URL}/updateActivity/${userId}`, {
+        actividad: nuevaActividad
+      });
+      
+      setTodosMisProductos(todosMisProductos.map(usuario => 
+        usuario.id === userId ? {...usuario, actividad: nuevaActividad} : usuario
       ));
+      
       setProductoAEditar(null);
-      window.location.reload();
+      setMensajeExito('Actividad actualizada correctamente');
+      setTimeout(() => setMensajeExito(''), 3000);
     } catch (error) {
-      console.error('Error al editar el producto:', error);
+      console.error('Error al editar la actividad:', error);
+      setMensajeExito('Error al actualizar la actividad');
+      setTimeout(() => setMensajeExito(''), 3000);
     }
   };
 
   const marcarMesPagado = async (userId) => {
     try {
-      const mesActual = getCurrentMonth();
-      await axios.post(`${API_URL}/marcar-mes-pagado`, { 
+      const mesActual = getCurrentMonthName();
+      await axios.post(`${API_URL}/addMount`, { 
         userId, 
-        mes: mesActual 
+        month: mesActual 
       });
       
-      // Actualizar el estado local
       setTodosMisProductos(todosMisProductos.map(usuario => {
         if (usuario.id === userId) {
           return {
@@ -111,60 +128,67 @@ const Admin = () => {
         }
         return usuario;
       }));
+      
+      setMensajeExito('Mes marcado como pagado correctamente');
+      setTimeout(() => setMensajeExito(''), 3000);
     } catch (error) {
       console.error('Error al marcar el mes como pagado:', error);
+      setMensajeExito('Error al marcar el mes como pagado');
+      setTimeout(() => setMensajeExito(''), 3000);
     }
   };
 
   const handleChangePrecio = (e) => {
     const { name, value } = e.target;
-    setPreciosActividades({
-      ...preciosActividades,
+    setPreciosActividades(prev => ({
+      ...prev,
       [name]: Number(value)
-    });
+    }));
   };
 
   const guardarPreciosActividades = async () => {
     try {
-      await axios.post(`${API_URL}/actualizar-precios`, preciosActividades);
+      const body = {
+        unaActividad: parseFloat(preciosActividades.unaActividad),
+        paseLibre: parseFloat(preciosActividades.paseLibre),
+        estudiante3dias: parseFloat(preciosActividades.estudiante3dias)
+      };
+
+      await axios.post(`${API_URL}/api/activity-prices/update-prices`, body);
       setMensajeExito('Precios actualizados correctamente');
       setTimeout(() => setMensajeExito(''), 3000);
     } catch (error) {
       console.error('Error al guardar precios:', error);
+      setMensajeExito('Error al actualizar precios');
+      setTimeout(() => setMensajeExito(''), 3000);
     }
   };
 
-  const EditarProducto = ({ producto, onGuardarCambios }) => {
-    const [nombre, setNombre] = useState(producto.nombre);
+  const EditarActividad = ({ producto, onGuardarCambios }) => {
     const [actividad, setActividad] = useState(producto.actividad);
 
     const handleGuardarCambios = () => {
-      const productoActualizado = { ...producto, nombre, actividad };
-      onGuardarCambios(productoActualizado);
+      onGuardarCambios(producto.id, actividad);
     };
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
         <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-          <h3 className="text-xl font-bold mb-4">Editar Usuario</h3>
+          <h3 className="text-xl font-bold mb-4">Editar Actividad</h3>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Nombre</label>
-              <input
-                type="text"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div>
               <label className="block text-sm font-medium text-gray-700">Actividad</label>
-              <input
-                type="text"
+              <select
                 value={actividad}
                 onChange={(e) => setActividad(e.target.value)}
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
+              >
+                {opcionesActividad.map((opcion, index) => (
+                  <option key={index} value={opcion}>
+                    {opcion}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
           <div className="mt-6 flex justify-end space-x-3">
@@ -175,7 +199,7 @@ const Admin = () => {
               Guardar
             </button>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => setProductoAEditar(null)}
               className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
             >
               Cancelar
@@ -192,6 +216,12 @@ const Admin = () => {
       <br />
       <br />
       <h1 className="text-3xl font-bold mb-8">Dashboard de Administrador</h1>
+
+      {mensajeExito && (
+        <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">
+          {mensajeExito}
+        </div>
+      )}
 
       <nav className="mb-8 flex flex-wrap gap-2">
         {['Usuarios', 'Abonados', 'No Abonados', 'Precios Actividades'].map((section, idx) => (
@@ -236,7 +266,7 @@ const Admin = () => {
                 <div className="flex flex-col">
                   <span className="font-semibold text-lg">{usuario.nombre}</span>
                   <span className="text-gray-600">
-                    Último mes pagado: {usuario.meses[usuario.meses.length - 1] || 'No hay pagos registrados'}
+                    Último mes pagado: {usuario.meses.length > 0 ? usuario.meses[usuario.meses.length - 1] : 'No hay pagos registrados'}
                   </span>
                   <span className="text-gray-600">Actividad: {usuario.actividad}</span>
                 </div>
@@ -263,13 +293,13 @@ const Admin = () => {
               </li>
             ))}
           </ul>
-          {productoAEditar && <EditarProducto producto={productoAEditar} onGuardarCambios={handleEditarProducto} />}
+          {productoAEditar && <EditarActividad producto={productoAEditar} onGuardarCambios={handleEditarActividad} />}
         </section>
       )}
 
       {seccionActiva === 'Abonados' && (
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Usuarios Abonados (Mes Actual)</h2>
+          <h2 className="text-2xl font-semibold mb-4">Usuarios Abonados (Mes Actual: {getCurrentMonthName()})</h2>
           <div className="mb-4 relative">
             <input
               type="text"
@@ -294,14 +324,14 @@ const Admin = () => {
           </div>
           <ul className="bg-white shadow-md rounded-lg p-4">
             {filteredUsers(todosMisProductos.filter(usuario => {
-              const ultimoMesPagado = usuario.meses[usuario.meses.length - 1];
-              return ultimoMesPagado === getCurrentMonth();
+              const ultimoMesPagado = usuario.meses.length > 0 ? usuario.meses[usuario.meses.length - 1] : null;
+              return ultimoMesPagado === getCurrentMonthName();
             })).map((usuario) => (
               <li key={usuario.id} className="border-b last:border-none py-4 flex justify-between items-center">
                 <div className="flex flex-col">
                   <span className="font-semibold text-lg">{usuario.nombre}</span>
                   <span className="text-gray-600">
-                    Último mes pagado: {usuario.meses[usuario.meses.length - 1] || 'No hay pagos registrados'}
+                    Último mes pagado: {usuario.meses.length > 0 ? usuario.meses[usuario.meses.length - 1] : 'No hay pagos registrados'}
                   </span>
                   <span className="text-gray-600">Actividad: {usuario.actividad}</span>
                 </div>
@@ -327,7 +357,7 @@ const Admin = () => {
 
       {seccionActiva === 'No Abonados' && (
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Usuarios No Abonados (Mes Actual)</h2>
+          <h2 className="text-2xl font-semibold mb-4">Usuarios No Abonados (Mes Actual: {getCurrentMonthName()})</h2>
           <div className="mb-4 relative">
             <input
               type="text"
@@ -352,14 +382,14 @@ const Admin = () => {
           </div>
           <ul className="bg-white shadow-md rounded-lg p-4">
             {filteredUsers(todosMisProductos.filter(usuario => {
-              const ultimoMesPagado = usuario.meses[usuario.meses.length - 1];
-              return ultimoMesPagado !== getCurrentMonth();
+              const ultimoMesPagado = usuario.meses.length > 0 ? usuario.meses[usuario.meses.length - 1] : null;
+              return ultimoMesPagado !== getCurrentMonthName();
             })).map((usuario) => (
               <li key={usuario.id} className="border-b last:border-none py-4 flex justify-between items-center">
                 <div className="flex flex-col">
                   <span className="font-semibold text-lg">{usuario.nombre}</span>
                   <span className="text-gray-600">
-                    Último mes pagado: {usuario.meses[usuario.meses.length - 1] || 'No hay pagos registrados'}
+                    Último mes pagado: {usuario.meses.length > 0 ? usuario.meses[usuario.meses.length - 1] : 'No hay pagos registrados'}
                   </span>
                   <span className="text-gray-600">Actividad: {usuario.actividad}</span>
                 </div>
@@ -399,8 +429,40 @@ const Admin = () => {
               </div>
             )}
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* ... (resto del código de precios de actividades permanece igual) ... */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Una Actividad</label>
+                <input
+                  type="number"
+                  name="unaActividad"
+                  value={preciosActividades.unaActividad}
+                  onChange={handleChangePrecio}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+                  step="0.01"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Pase Libre</label>
+                <input
+                  type="number"
+                  name="paseLibre"
+                  value={preciosActividades.paseLibre}
+                  onChange={handleChangePrecio}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+                  step="0.01"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Estudiante</label>
+                <input
+                  type="number"
+                  name="estudiante3dias"
+                  value={preciosActividades.estudiante3dias}
+                  onChange={handleChangePrecio}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+                  step="0.01"
+                />
+              </div>
             </div>
 
             <button
