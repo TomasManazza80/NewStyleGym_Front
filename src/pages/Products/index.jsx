@@ -31,7 +31,7 @@ const Products = () => {
       try {
         const decoded = jwtDecode(token);
         console.log('Token decoded:', decoded);
-        alert(`Token decoded: ${JSON.stringify(decoded)}`);
+        // alert(`Token decoded: ${JSON.stringify(decoded)}`);
         // 修改为正确的API端点
         const response = await axios.get(`http://localhost:3000/getId/${decoded.email}`, {
           headers: { 
@@ -40,7 +40,7 @@ const Products = () => {
         });
   
         console.log('User response:', response.data);
-        alert(`User response!!!!!!!!!!!!!: ${JSON.stringify(response.data)}`);
+        // alert(`User response!!!!!!!!!!!!!: ${JSON.stringify(response.data)}`);
         setUserId(response.data);
         const id = response.data;
         // 修改为正确的活动端点
@@ -49,10 +49,10 @@ const Products = () => {
             Authorization: `Bearer ${token}`
           }
         });
-        alert(`ASI ES COMO QUEDA EL ID DESPUES DE MODIFICARSE: ${JSON.stringify(response.data)}`);
+      //  alert (`ASI ES COMO QUEDA EL ID DESPUES DE MODIFICARSE: ${JSON.stringify(response.data)}`);
       
         const activity = activityResponse.data;
-        alert(`Activity%%%%%%%%%: ${activity}`);
+        // alert(`Activity%%%%%%%%%: ${activity}`);
         setUserActivity(activity); // Set the user activity
 
         // Set activity price based on the activity type

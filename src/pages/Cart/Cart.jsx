@@ -9,7 +9,7 @@ import emailjs from "@emailjs/browser";
 import authContext from "../../store/store";
 import { jwtDecode } from "jwt-decode";
 
-const API_URL = "https://ecommerceback-server.onrender.com";
+const API_URL = "http://localhost:3000";
 
 function Cart() {
   const cart = useSelector((state) => state.cart);

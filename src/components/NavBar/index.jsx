@@ -12,7 +12,7 @@ import { useSelector } from "react-redux";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 
-const API_URL = "https://ecommerceback-server.onrender.com";
+const API_URL = "http://localhost:3000";
 
 function Index() {
   const [toggle, setToggle] = useState(false);
@@ -35,7 +35,7 @@ function Index() {
     }
 
     try {
-      const response = await axios.get(`${API_URL}/users/role/${email}`, {
+      const response = await axios.get(`${API_URL}/role/${email}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -87,7 +87,7 @@ function Index() {
               Inicio
             </NavLink>
             <NavLink to="/products" className="text-black p-3 m-2 font-bold">
-              Productos
+              Pagos
             </NavLink>
             <NavLink to="/about" className="text-black p-3 m-2 font-bold">
               Información

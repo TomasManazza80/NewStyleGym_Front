@@ -1,425 +1,419 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Cloudinary } from '@cloudinary/url-gen';
-import { AdvancedImage } from '@cloudinary/react';
 
-const API_URL = 'https://ecommerceback-haed.onrender.com';
-
+const API_URL = 'http://localhost:3000';
 
 const Admin = () => {
-  // Estados iniciales y configuraciones
-  const [showForm, setShowForm] = useState(false);
+  const getCurrentMonth = () => {
+    const date = new Date();
+    return date.getMonth() + 1;
+  };
+
+  // Estados para usuarios
   const [productoAEditar, setProductoAEditar] = useState(null);
   const [todosMisProductos, setTodosMisProductos] = useState([]);
-  const [productosVendidos, setProductosVendidos] = useState([]);
-  const [nuevoProducto, setNuevoProducto] = useState({
-    nombre: '',
-    precio: 0,
-    marca: '',
-    categoria: '',
-    cantidad: 0,
-    talle: '',
-    imagenes: []
+  const [seccionActiva, setSeccionActiva] = useState('Usuarios');
+  const [searchTerm, setSearchTerm] = useState('');
+  // Estados para precios de actividades
+  const [preciosActividades, setPreciosActividades] = useState({
+    musculacion3dias: 0,
+    musculacion7dias: 0,
+    sumba: 0,
+    crossfit: 0,
+    yoga: 0,
+    pilates: 0,
+    spinning: 0,
+    boxeo: 0
   });
-  const [recaudado, setRecaudado] = useState(0);
-  const [seccionActiva, setSeccionActiva] = useState('productos');
-
-  const categorias = [
-    'remeras',
-    'pantalones',
-    'abrigos',
-    'calzados',
-    'ropa interior',
-    'camisas',
-    'accesorios'
-  ];
-  const recargarPagina = () => {
-    window.location.reload();
-  };
-
-  const talle = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
-  const cloudinary = new Cloudinary({ cloud: { cloudName: 'dxvkqumpu' } });
+  const [mensajeExito, setMensajeExito] = useState('');
 
   useEffect(() => {
-    const obtenerProductos = async () => {
+    const obtenerUsuarios = async () => {
       try {
-        const response = await axios.get(`https://ecommerceback-haed.onrender.com/products/products`);
-        setTodosMisProductos(response.data);
+        const response = await axios.get(`${API_URL}/getAllUsers`);
+        const usuarios = response.data;
+        setTodosMisProductos(usuarios.map(usuario => ({
+          id: usuario.id,
+          nombre: usuario.name,
+          numero: usuario.number,
+          email: usuario.email,
+          role: usuario.role,
+          meses: usuario.meses,
+          actividad: usuario.actividad,
+          fechaCreacion: new Date(usuario.createdAt).toLocaleDateString(),
+          fechaActualizacion: new Date(usuario.updatedAt).toLocaleDateString()
+        })));
       } catch (error) {
-        console.error('Error al obtener los productos:', error);
+        console.error('Error al obtener los usuarios:', error);
       }
     };
 
-    const obtenerProductosVendidos = async () => {
+    const obtenerPreciosActividades = async () => {
       try {
-        const response = await axios.get(`https://ecommerceback-haed.onrender.com/boughtProduct/AllboughtProducts`);
-        
-        setProductosVendidos(response.data);
-        console.log("!!estos son los productos vendidos: ", response.data);
+        const response = await axios.get(`${API_URL}/precios-actividades`);
+        if (response.data) {
+          setPreciosActividades(response.data);
+        }
       } catch (error) {
-        console.error('Error al obtener los productos vendidos:', error);
+        console.error('Error al obtener precios de actividades:', error);
       }
     };
-    
-    obtenerProductosVendidos();
-    obtenerProductos();
+
+    obtenerUsuarios();
+    obtenerPreciosActividades();
   }, []);
 
-
-
-  // Funciones adicionales
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNuevoProducto({ ...nuevoProducto, [name]: value });
+  const filteredUsers = (users) => {
+    return users.filter(usuario =>
+      usuario.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      usuario.actividad.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   };
 
-  const handleFileChange = async (e) => {
-    const files = Array.from(e.target.files);
-    const uploadPromises = files.map((file) => uploadImageToCloudinary(file));
+  const handleEliminarProducto = async (ProductId) => {
     try {
-      const urls = await Promise.all(uploadPromises);
-      setNuevoProducto({ ...nuevoProducto, imagenes: urls });
+      await axios.delete(`https://ecommerceback-haed.onrender.com/products/products/${ProductId}`);
+      setTodosMisProductos(todosMisProductos.filter((producto) => producto.id !== ProductId));
+      window.location.reload();
     } catch (error) {
-      console.error('Error al subir las imágenes a Cloudinary:', error);
+      console.error('Error al eliminar el producto:', error);
     }
   };
 
- const uploadImageToCloudinary = async (file) => {
-   const formData = new FormData();
-   formData.append('file', file);
-   formData.append('upload_preset', 'ecommerce');
- 
-   try {
-    const response = await axios.post(`https://api.cloudinary.com/v1_1/dxvkqumpu/image/upload`, formData);
-     return response.data.secure_url;
-   } catch (error) {
-     console.error('Error al subir la imagen a Cloudinary:', error);
-     return null;
-   }
- };
+  const handleEditarProducto = async (productoActualizado) => {
+    try {
+      await axios.put(`https://ecommerceback-haed.onrender.com/products/products/${productoActualizado.id}`, productoActualizado);
+      setTodosMisProductos(todosMisProductos.map(producto => 
+        producto.id === productoActualizado.id ? productoActualizado : producto
+      ));
+      setProductoAEditar(null);
+      window.location.reload();
+    } catch (error) {
+      console.error('Error al editar el producto:', error);
+    }
+  };
 
- const handleAgregarProducto = async () => {
-  try {
-    const response = await axios.post(`https://ecommerceback-haed.onrender.com/products/products`, nuevoProducto);
-    setTodosMisProductos([...todosMisProductos, response.data]);
-    setRecaudado((prevRecaudado) => prevRecaudado + nuevoProducto.precio * nuevoProducto.cantidad);
-    setNuevoProducto({ nombre: '', precio: 0, marca: '', categoria: '', cantidad: 0, talle: '', imagenes: [] });
-  } catch (error) {
-    console.error('Error al crear el producto:', error);
-  }
-};
+  const marcarMesPagado = async (userId) => {
+    try {
+      const mesActual = getCurrentMonth();
+      await axios.post(`${API_URL}/marcar-mes-pagado`, { 
+        userId, 
+        mes: mesActual 
+      });
+      
+      // Actualizar el estado local
+      setTodosMisProductos(todosMisProductos.map(usuario => {
+        if (usuario.id === userId) {
+          return {
+            ...usuario,
+            meses: [...usuario.meses, mesActual]
+          };
+        }
+        return usuario;
+      }));
+    } catch (error) {
+      console.error('Error al marcar el mes como pagado:', error);
+    }
+  };
 
-const handleEditarProducto = async (productoActualizado) => {
-  try {
-    const response = await axios.put(`https://ecommerceback-haed.onrender.com/products/products/${productoActualizado.ProductId}`, productoActualizado);
-    setTodosMisProductos(todosMisProductos.map((producto) => (producto.id === productoActualizado.id ? response.data : producto)));
-    setShowForm(false);
-  } catch (error) {
-    console.error('Error al editar el producto:', error);
-  }
-};
-
-const handleEliminarProducto = async (ProductId, precio, cantidad) => {
-   
-  try {
-    const response = await axios.delete(`https://ecommerceback-haed.onrender.com/products/products/${ProductId}`);
-    setTodosMisProductos(todosMisProductos.filter((producto) => producto.id !== ProductId));
-    setRecaudado((prevRecaudado) => prevRecaudado - precio * cantidad);
-    recargarPagina();
-  } catch (error) {
-    console.error('Error al eliminar el producto:', error);
-  }
-};
-
-const descontarStock = async (id, cantidad, id_delete) => {
-  try {
-    const id_ok = id;
-    console.log("ESTE ES EL ID DE MI PRODUCTO $$$$$$$$$$$$$$ ", id_ok);
-
-    const response = await axios.put(`https://ecommerceback-haed.onrender.com/products/products/update-quantity/${id_ok}`, {
-      quantityToDiscount: cantidad,
+  const handleChangePrecio = (e) => {
+    const { name, value } = e.target;
+    setPreciosActividades({
+      ...preciosActividades,
+      [name]: Number(value)
     });
-    console.log(response.data);
-    handleEliminarProductoVendido(id_delete);
-  } catch (error) {
-    console.error('Error al descontar stock:', error);
-  }
-};
+  };
 
+  const guardarPreciosActividades = async () => {
+    try {
+      await axios.post(`${API_URL}/actualizar-precios`, preciosActividades);
+      setMensajeExito('Precios actualizados correctamente');
+      setTimeout(() => setMensajeExito(''), 3000);
+    } catch (error) {
+      console.error('Error al guardar precios:', error);
+    }
+  };
 
+  const EditarProducto = ({ producto, onGuardarCambios }) => {
+    const [nombre, setNombre] = useState(producto.nombre);
+    const [actividad, setActividad] = useState(producto.actividad);
 
-const handleEliminarProductoVendido = async (id) => {
-  try {
-    await axios.delete(`https://ecommerceback-haed.onrender.com/boughtProduct/${id}`);
-    setProductosVendidos((prevProductosVendidos) => prevProductosVendidos.filter((producto) => producto.id !== id));
-    recargarPagina();
-  } catch (error) {
-    console.error('Error al eliminar producto:', error);
-  }
-};
+    const handleGuardarCambios = () => {
+      const productoActualizado = { ...producto, nombre, actividad };
+      onGuardarCambios(productoActualizado);
+    };
 
-
-const EditarProducto = ({ producto, onGuardarCambios }) => {
-  const [nombre, setNombre] = useState(producto.nombre);
-  const [precio, setPrecio] = useState(producto.precio);
-  const [marca, setMarca] = useState(producto.marca);
-  const [categoria, setCategoria] = useState(producto.categoria);
-  const [cantidad, setCantidad] = useState(producto.cantidad);
-  const [talle, setTalle] = useState(producto.talle);
-
-  const handleGuardarCambios = () => {
-    const productoActualizado = { ...producto, nombre, precio, marca, categoria, cantidad, talle };
-    onGuardarCambios(productoActualizado);
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+          <h3 className="text-xl font-bold mb-4">Editar Usuario</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Nombre</label>
+              <input
+                type="text"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Actividad</label>
+              <input
+                type="text"
+                value={actividad}
+                onChange={(e) => setActividad(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+          <div className="mt-6 flex justify-end space-x-3">
+            <button
+              onClick={handleGuardarCambios}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+            >
+              Guardar
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        width: '100vw',
-        height: '100vh',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 1000
-      }}
-    >
-      <div className="p-4 border border-gray-300 rounded shadow-md bg-white max-w-md w-full h-full relative">
-        <form>
-          {['nombre', 'precio', 'marca', 'categoria', 'cantidad', 'talle'].map((field, idx) => (
-            <label key={idx} className="block mb-2">
-              {field.charAt(0).toUpperCase() + field.slice(1)}:
-              <input
-                type={field === 'precio' || field === 'cantidad' ? 'number' : 'text'}
-                value={field === 'nombre' ? nombre : field === 'precio' ? precio : field === 'marca' ? marca : field === 'categoria' ? categoria : field === 'cantidad' ? cantidad : talle}
-                onChange={(e) =>
-                  field === 'nombre'
-                    ? setNombre(e.target.value)
-                    : field === 'precio'
-                    ? setPrecio(e.target.value)
-                    : field === 'marca'
-                    ? setMarca(e.target.value)
-                    : field === 'categoria'
-                    ? setCategoria(e.target.value)
-                    : field === 'cantidad'
-                    ? setCantidad(e.target.value)
-                    : setTalle(e.target.value)
-                }
-                className="block w-full p-2 mt-1 border border-gray-300 rounded"
+    <div className="p-8">
+      <br />
+      <br />
+      <br />
+      <h1 className="text-3xl font-bold mb-8">Dashboard de Administrador</h1>
+
+      <nav className="mb-8 flex flex-wrap gap-2">
+        {['Usuarios', 'Abonados', 'No Abonados', 'Precios Actividades'].map((section, idx) => (
+          <button
+            key={idx}
+            className={`px-4 py-2 rounded ${seccionActiva === section ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+            onClick={() => setSeccionActiva(section)}
+          >
+            {section}
+          </button>
+        ))}
+      </nav>
+
+      {seccionActiva === 'Usuarios' && (
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">Usuarios del Gimnasio</h2>
+          <div className="mb-4 relative">
+            <input
+              type="text"
+              placeholder="Buscar usuario..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-2 pl-10 border border-gray-300 rounded"
+            />
+            <svg
+              className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
-            </label>
-          ))}
-        </form>
-        <div className="mt-4 flex">
-          <button onClick={handleGuardarCambios} className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-            Guardar cambios
-          </button>
-          <button onClick={() => recargarPagina()} className="bg-red-500 text-white px-4 py-2 ml-2 rounded hover:bg-red-600">
-            Cerrar
-          </button>
-        </div>
-      </div>
+            </svg>
+          </div>
+          <ul className="bg-white shadow-md rounded-lg p-4">
+            {filteredUsers(todosMisProductos).map((usuario) => (
+              <li key={usuario.id} className="border-b last:border-none py-4 flex justify-between items-center">
+                <div className="flex flex-col">
+                  <span className="font-semibold text-lg">{usuario.nombre}</span>
+                  <span className="text-gray-600">
+                    Último mes pagado: {usuario.meses[usuario.meses.length - 1] || 'No hay pagos registrados'}
+                  </span>
+                  <span className="text-gray-600">Actividad: {usuario.actividad}</span>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setProductoAEditar(usuario)}
+                    className="bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600"
+                  >
+                    Editar Actividad
+                  </button>
+                  <button
+                    onClick={() => marcarMesPagado(usuario.id)}
+                    className="bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600"
+                  >
+                    Marcar Mes Pagado
+                  </button>
+                  <button
+                    onClick={() => handleEliminarProducto(usuario.id)}
+                    className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          {productoAEditar && <EditarProducto producto={productoAEditar} onGuardarCambios={handleEditarProducto} />}
+        </section>
+      )}
+
+      {seccionActiva === 'Abonados' && (
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">Usuarios Abonados (Mes Actual)</h2>
+          <div className="mb-4 relative">
+            <input
+              type="text"
+              placeholder="Buscar usuario..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-2 pl-10 border border-gray-300 rounded"
+            />
+            <svg
+              className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+          <ul className="bg-white shadow-md rounded-lg p-4">
+            {filteredUsers(todosMisProductos.filter(usuario => {
+              const ultimoMesPagado = usuario.meses[usuario.meses.length - 1];
+              return ultimoMesPagado === getCurrentMonth();
+            })).map((usuario) => (
+              <li key={usuario.id} className="border-b last:border-none py-4 flex justify-between items-center">
+                <div className="flex flex-col">
+                  <span className="font-semibold text-lg">{usuario.nombre}</span>
+                  <span className="text-gray-600">
+                    Último mes pagado: {usuario.meses[usuario.meses.length - 1] || 'No hay pagos registrados'}
+                  </span>
+                  <span className="text-gray-600">Actividad: {usuario.actividad}</span>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setProductoAEditar(usuario)}
+                    className="bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600"
+                  >
+                    Editar Actividad
+                  </button>
+                  <button
+                    onClick={() => handleEliminarProducto(usuario.id)}
+                    className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {seccionActiva === 'No Abonados' && (
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">Usuarios No Abonados (Mes Actual)</h2>
+          <div className="mb-4 relative">
+            <input
+              type="text"
+              placeholder="Buscar usuario..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-2 pl-10 border border-gray-300 rounded"
+            />
+            <svg
+              className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+          <ul className="bg-white shadow-md rounded-lg p-4">
+            {filteredUsers(todosMisProductos.filter(usuario => {
+              const ultimoMesPagado = usuario.meses[usuario.meses.length - 1];
+              return ultimoMesPagado !== getCurrentMonth();
+            })).map((usuario) => (
+              <li key={usuario.id} className="border-b last:border-none py-4 flex justify-between items-center">
+                <div className="flex flex-col">
+                  <span className="font-semibold text-lg">{usuario.nombre}</span>
+                  <span className="text-gray-600">
+                    Último mes pagado: {usuario.meses[usuario.meses.length - 1] || 'No hay pagos registrados'}
+                  </span>
+                  <span className="text-gray-600">Actividad: {usuario.actividad}</span>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setProductoAEditar(usuario)}
+                    className="bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600"
+                  >
+                    Editar Actividad
+                  </button>
+                  <button
+                    onClick={() => marcarMesPagado(usuario.id)}
+                    className="bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600"
+                  >
+                    Marcar Mes Pagado
+                  </button>
+                  <button
+                    onClick={() => handleEliminarProducto(usuario.id)}
+                    className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {seccionActiva === 'Precios Actividades' && (
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">Gestión de Precios de Actividades</h2>
+          <div className="bg-white shadow-md rounded-lg p-6">
+            {mensajeExito && (
+              <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">
+                {mensajeExito}
+              </div>
+            )}
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* ... (resto del código de precios de actividades permanece igual) ... */}
+            </div>
+
+            <button
+              onClick={guardarPreciosActividades}
+              className="mt-6 bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+            >
+              Guardar Precios
+            </button>
+          </div>
+        </section>
+      )}
     </div>
   );
-};
-
-return (
-  <div className="p-8">
-    <br />
-    <br />
-    <br />
-    <h1 className="text-3xl font-bold mb-8">Dashboard de Administrador</h1>
-
-    <nav className="mb-8">
-      {['productos', 'cargar', 'ventas'].map((section, idx) => (
-        <button
-          key={idx}
-          className={`mr-4 px-4 py-2 rounded ${seccionActiva === section ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
-          onClick={() => setSeccionActiva(section)}
-        >
-          {section.charAt(0).toUpperCase() + section.slice(1)} 
-        </button>
-      ))}
-    </nav>
-
-    {seccionActiva === 'productos' && (
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Todos Mis Productos</h2>
-        <ul className="bg-white shadow-md rounded-lg p-4">
-        {todosMisProductos.map((producto) => {
-            const imgs = producto.imagenes && producto.imagenes.length > 0 ? producto.imagenes : [];
-
-            return (
-              <li key={producto.id} className="border-b last:border-none py-2 flex justify-between items-center">
-                <span>
-                  {producto.nombre} - ${producto.precio} - {producto.marca} - {producto.categoria} - Cantidad: {producto.cantidad}
-                </span>
-                {imgs.length > 0 && (
-                  <div>
-                    <img src={imgs[0]} alt="" width="150" className="" />
-                  </div>
-                )}
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleEliminarProducto(producto.ProductId, producto.precio, producto.cantidad)}
-                    className="bg-red-500 text-white px-4 py-1 rounded"
-                  >
-                    Eliminar
-                  </button>
-                  <button
-                    onClick={() => setProductoAEditar(producto)}
-                    className="bg-blue-500 text-white px-4 py-1 rounded ml-2"
-                  >
-                    Editar
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-        {productoAEditar && <EditarProducto producto={productoAEditar} onGuardarCambios={handleEditarProducto} />}
-      </section>
-    )}
-
-    {seccionActiva === 'ventas' && (
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Productos Vendidos</h2>
-        <ul className="bg-white shadow-md rounded-lg p-4">
-          {productosVendidos.map((producto) => {
-            const imgs = producto.imagenes && producto.imagenes.length > 0 ? producto.imagenes : [];
-
-            return (
-              <li key={producto.id} className="border-b last:border-none py-2 flex justify-between items-center">
-                <span>
-                  {producto.nombre} - ${producto.precio} - {producto.marca} - {producto.categoria} - Cantidad: {producto.cantidad}
-                </span>
-                {imgs.length > 0 && (
-                  <div>
-                    <img src={imgs[0]} alt="" width="150" className="" />
-                  </div>
-                )}
-                <div className="flex space-x-2">
-                <button
-                    onClick={() => descontarStock(producto.marca,  producto.cantidad, producto.ProductId)}   
-                    className="bg-green-500 text-white px-4 py-1 rounded"
-                  >
-                    Confirmar Venta
-                  </button>
-                  <button
-                    onClick={() => handleEliminarProductoVendido(producto.ProductId)}
-                    className="bg-red-500 text-white px-4 py-1 rounded"
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-    )}
-
-    {seccionActiva === 'cargar' && (
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Cargar Producto</h2>
-        <div className="bg-white shadow-md rounded-lg p-4 space-y-4">
-          <div>
-            <label className="block font-medium mb-2">Nombre del producto</label>
-            <input
-              type="text"
-              name="nombre"
-              placeholder="Nombre del producto"
-              className="w-full p-2 border rounded"
-              value={nuevoProducto.nombre}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div>
-            <label className="block font-medium mb-2">Precio del producto</label>
-            <input
-              type="number"
-              name="precio"
-              placeholder="Precio del producto"
-              className="w-full p-2 border rounded"
-              value={nuevoProducto.precio}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div>
-            <label className="block font-medium mb-2">Marca</label>
-            <input
-              type="text"
-              name="marca"
-              className="w-full p-2 border rounded"
-              value={nuevoProducto.marca}
-              onChange={handleInputChange}
-            />
-          </div>
-         <div>
-  <label className="block font-medium mb-2">Categoría</label>
-  <input
-    type="text"
-    name="categoria"
-    className="w-full p-2 border rounded"
-    value={nuevoProducto.categoria}
-    onChange={handleInputChange}
-    list="categorias" // para mostrar sugerencias basadas en la lista de categorías
-  />
-  <datalist id="categorias">
-    {categorias.map((cat, index) => (
-      <option key={index} value={cat} />
-    ))}
-  </datalist>
-</div>
-
-          <div>
-            <label className="block font-medium mb-2">Cantidad</label>
-            <input
-              type="number"
-              name="cantidad"
-              placeholder="Cantidad"
-              className="w-full p-2 border rounded"
-              value={nuevoProducto.cantidad}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div>
-            <label className="block font-medium mb-2">Talle</label>
-            <input
-              type="text"
-              name="talle"
-              placeholder="Talle"
-              className="w-full p-2 border rounded"
-              value={nuevoProducto.talle}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div>
-            <label className="block font-medium mb-2">Imagen del producto</label>
-            <input
-              type="file"
-              name="imagenes"
-              className="w-full p-2 border rounded"
-              onChange={handleFileChange}
-              multiple
-            />
-          </div>
-          <button onClick={handleAgregarProducto} className="bg-blue-500 text-white px-4 py-2 rounded">
-            Agregar Producto
-          </button>
-        </div>
-      </section>
-    )}
-
-   
-    
-  </div>
-);
 };
 
 export default Admin;

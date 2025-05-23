@@ -4,7 +4,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import axios from "axios";
 import * as Yup from "yup";
 import authContext from "../../store/store";
-const API_URL = 'https://ecommerceback-server.onrender.com';
+const API_URL = 'http://localhost:3000';
 
 
 function Login() {

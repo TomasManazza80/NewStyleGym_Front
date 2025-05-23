@@ -117,7 +117,8 @@ export const Navigation = (props) => {
               fontSize: '1.2em',
             }}
           >
-            CLINICA OFTALMOLOGICA VISAGE
+        
+
           </a>
         </div>
 

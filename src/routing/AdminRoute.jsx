@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Navigate } from 'react-router-dom';
 import { jwtDecode } from "jwt-decode"; // Cambiado aquí
 import AuthContext from '../store/store'; // Asegúrate de tener el contexto de autenticación
-const API_URL = 'https://ecommerceback-server.onrender.com';
+const API_URL = 'http://localhost:3000';
 
 
 
@@ -21,7 +21,7 @@ const AdminRoute = ({ children }) => {
 
       const decodedToken = jwtDecode(token);
       try {
-        const response = await axios.get(`${API_URL}/users/role/${decodedToken.email}`, {
+        const response = await axios.get(`${API_URL}/role/${decodedToken.email}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
