@@ -1,0 +1,60 @@
+.logo{
+    height: 250px;
+    width: auto;
+    padding: 0px;
+}
+
+.imgAcividad{
+    height: 200px;
+    width: auto;
+}
+
+
+
+
+.designed-by {
+    font-size: 1.2em;
+    color: #000000;
+    
+}
+
+.designed-by a {
+   
+    border-radius: 10%;
+    color: #fbf0f0;
+    font-weight: bold;
+    border-bottom: 2px solid #1e90ff;
+    transition: color 0.3s ease, border-bottom-color 0.3s ease;
+}
+
+.designed-by a:hover {
+   
+    background-color:blue;
+    color: #ff9900;
+    border-bottom-color: #ff6347;
+}
+
+
+.class-thumb {
+    display: inline-block;
+    width: 300px;
+    
+    vertical-align: top;
+  }
+  
+
+
+
+  @media (max-width: 768px) {
+    .class-thumb {
+      width: 100%;
+      margin: 10px 0;
+    }
+  }
+
+
+  .imgAcividad1{
+    height: 200px;
+    width: 300px;
+    
+  }

@@ -1,0 +1,301 @@
+/* index.css */
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+body {
+  font-family: "Poppins", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  
+}
+
+
+@layer base {
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"] {
+    -webkit-appearance: none;
+    -moz-appearance: textfield !important;
+  }
+}
+/* Agregar esto a tu archivo CSS */
+
+/* Pantallas pequeñas (celulares) */
+@media (max-width: 768px) {
+  /* Ajustar el tamaño de la fuente */
+  body {
+    font-size: 16px;
+  }
+
+
+  
+  /* Ajustar el tamaño de los componentes */
+  .scroll-smooth {
+    padding: 20px;
+    overflow-x: hidden; /* Agregado para evitar desplazamiento horizontal */
+  }
+
+  .Hero {
+    height: 200px;
+    background-size: cover;
+    max-width: 100%; /* Agregado para ajustar el ancho */
+  }
+
+ .Hero {
+    /* Estilos para el Hero en pantallas pequeñas */
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .Hero h1 {
+    font-size: 5px; /* Achicar los h1 de .Hero */
+  }
+  .Hero h1 {
+    font-size: 1.5rem; /* Ajustamos a 24px */
+  }
+
+  .Hero h3 {
+    font-size: 0.875rem; /* Ajustamos a 14px */
+  }
+
+  .Hero button {
+    font-size: 0.875rem; /* Ajustamos a 14px */
+  }
+
+  .Fproduct {
+    flex-direction: column;
+    align-items: center;
+    max-width: 100%; /* Agregado para ajustar el ancho */
+  }
+
+  .BuySteps {
+    flex-direction: column;
+    align-items: center;
+    max-width: 100%; /* Agregado para ajustar el ancho */
+  }
+
+ 
+}
+
+/* Pantallas medianas (tabletas) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Ajustar el tamaño de la fuente */
+  body {
+    font-size: 18px;
+  }
+
+  /* Ajustar el tamaño de los componentes */
+  .scroll-smooth {
+    padding: 30px;
+  }
+
+  .Hero {
+    height: 300px;
+    background-size: cover;
+  }
+
+  .Fproduct {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .BuySteps {
+    flex-direction: row;
+    align-items: center;
+  }
+
+
+}
+
+/* Pantallas grandes (desktop) */
+@media (min-width: 1025px) {
+  /* Ajustar el tamaño de la fuente */
+  body {
+    font-size: 20px;
+  }
+
+  /* Ajustar el tamaño de los componentes */
+  .scroll-smooth {
+    padding: 40px;
+  }
+
+  .Hero {
+    height: 400px;
+    background-size: cover;
+  }
+
+  .Fproduct {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .BuySteps {
+    flex-direction: row;
+    align-items: center;
+  }
+
+ 
+}
+
+
+
+/*ESTILOS DEL HERO------------------------------------------------ */
+
+.hero-container {
+  margin-left: -40px;
+  
+  height: 400px;
+  width: 100vw; /* Usa 100vw para ocupar todo el ancho de la ventana */
+  background: url('../src/images/fondo.gif') no-repeat center center/cover;
+  display: flex;
+  align-items: center;
+  position: relative;
+  top: -50px;
+  box-sizing: border-box; /* Asegura que el ancho incluya el relleno y el borde */
+}
+
+.hero-content {
+  padding: 40px;
+  color: white;
+}
+
+.hero-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+
+.hero-subtitle {
+  margin-top: 15px;
+  font-size: 1rem;
+}
+
+.hero-button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background: white;
+  color: #1E90FF;
+  border-radius: 2rem;
+}
+
+.hero-link {
+  padding: 16px;
+  font-weight: bold;
+  color: white;
+}
+
+.hero-icon {
+  position: absolute;
+  bottom: 0;
+  right: 50%;
+  transform: translateX(50%);
+}
+
+.hero-icon .icon.bounce {
+  font-size: 2rem;
+  color: red;
+  animation: bounce 2s infinite;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .hero-container {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .hero-title {
+    font-size: 2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 0.875rem;
+  }
+
+  .hero-button {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+  }
+
+  .hero-link {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 1.5rem;
+  }
+
+  .hero-subtitle {
+    font-size: 0.75rem;
+  }
+  
+  .hero-button {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+  }
+
+  .hero-link {
+    padding: 8px;
+  }
+
+  .hero-icon .icon.bounce {
+    font-size: 1.5rem;
+  }
+}
+
+@keyframes bounce {
+  from, 20%, 53%, 80%, to {
+    transform: translateY(0);
+  }
+  40%, 43% {
+    transform: translateY(-30px);
+  }
+  70% {
+    transform: translateY(-15px);
+  }
+  90% {
+    transform: translateY(-4px);
+  }
+}
+
+
+
+/*ESTILOS DEL HERO FIN------------------------------------------------ */
+
+
+/* CSS para evitar el movimiento horizontal en dispositivos móviles */
+
+@media only screen and (max-width: 768px) {
+  .flex {
+    flex-direction: column;
+  }
+  .flex-wrap {
+    flex-wrap: wrap;
+  }
+  .w-72 {
+    width: 100%;
+  }
+  .h-96 {
+    height: auto;
+  }
+}
+
+
+  /* Para pantallas pequeñas (celulares) */
+@media (max-width: 768px) {
+  .flex {
+    flex-direction: column;
+  }
+  
+  .flex-nowrap {
+    flex-wrap: nowrap;
+  }
+
+  .space-x-4 > :not(:first-child) {
+    margin-left: 1rem;
+  }
+}
