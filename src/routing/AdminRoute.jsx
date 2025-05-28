@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Navigate } from 'react-router-dom';
 import { jwtDecode } from "jwt-decode"; // Cambiado aquí
 import AuthContext from '../store/store'; // Asegúrate de tener el contexto de autenticación
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = "https://newstylegym-back.onrender.com";
 
 
 
