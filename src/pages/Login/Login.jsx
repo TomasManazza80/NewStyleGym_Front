@@ -4,8 +4,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import axios from "axios";
 import * as Yup from "yup";
 import authContext from "../../store/store";
-const API_URL = import.meta.env.VITE_API_URL;
-
+const API_URL = "https://newstylegym-back.onrender.com";
 
 
 function Login() {

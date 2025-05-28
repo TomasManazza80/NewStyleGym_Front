@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
 const API_URL = import.meta.env.VITE_API_URL;
 const containerStyle = {
   display: 'flex',
@@ -63,8 +62,7 @@ function Login() {
   const navigate = useNavigate();
 
   const [hover, setHover] = useState(false);
-alert(API_URL);
-  // Función para manejar el inicio de sesión y redirigirse al use
+
   const handleSubmit = (event) => {
     event.preventDefault();
     // Aquí puedes añadir la lógica para manejar el inicio de sesión
