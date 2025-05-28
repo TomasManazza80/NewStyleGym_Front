@@ -3,6 +3,7 @@ import { CheckCircle } from 'lucide-react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 const API_URL = import.meta.env.VITE_API_URL;
+
 const Products = () => {
   const [mesesPagados, setMesesPagados] = useState([]);
   const [error, setError] = useState('');
@@ -82,7 +83,7 @@ const Products = () => {
         }
 
         setActivityPrice(parseFloat(price));
-
+    
         // Obtener meses pagados
         const mesesResponse = await axios.get(`${API_URL}/getMounts/${response.data}`, {
           headers: { 
